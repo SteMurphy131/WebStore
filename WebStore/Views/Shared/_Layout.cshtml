@@ -1,4 +1,9 @@
-﻿@inject Microsoft.ApplicationInsights.AspNetCore.JavaScriptSnippet JavaScriptSnippet
+﻿@using Microsoft.AspNetCore.Http
+@inject Microsoft.ApplicationInsights.AspNetCore.JavaScriptSnippet JavaScriptSnippet
+@{
+    bool loggedIn = Context.Session.GetInt32("_Logged") == 1;
+}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,26 +24,57 @@
     @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">WebStore</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    @{
+        if (loggedIn)
+        {
+            <nav class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">WebStore</a>
+                    </div>
+                    <div class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav">
+                            <li><a asp-area="" asp-controller="Users" asp-action="Details">Profile</a></li>
+                            <li><a asp-area="" asp-controller="Users" asp-action="LogOut">Log Out</a></li>
+                            <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+                            <li><a asp-area="" asp-controller="StockItems" asp-action="Index">Items</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        }
+        else
+        {
+            <nav class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">WebStore</a>
+                    </div>
+                    <div class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav">
+                            <li><a asp-area="" asp-controller="Users" asp-action="Register">Register</a></li>
+                            <li><a asp-area="" asp-controller="Users" asp-action="LogIn">Log In</a></li>
+                            <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        }
+    }
     <div class="container body-content">
         @RenderBody()
         <hr />
