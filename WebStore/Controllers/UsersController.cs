@@ -14,6 +14,7 @@ namespace WebStore.Controllers
     public class UsersController : Controller
     {
         const string SessionKeyName = "_Name";
+        const string SessionKeyID = "_ID";
         const string SessionKeyLoggedIn = "_Logged";
 
         private readonly IDataAccessProvider _accessProvider;
@@ -30,7 +31,7 @@ namespace WebStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogIn([Bind("Username, Password, ConfirmPassword, Email, ConfirmEmail")] User user)
+        public async Task<IActionResult> LogIn([Bind("Name, Password, ConfirmPassword, Email, ConfirmEmail")] User user)
         {
             if (user.Name == null || user.Password == null) return View("LogIn");
 
@@ -41,6 +42,7 @@ namespace WebStore.Controllers
 
             HttpContext.Session.SetString(SessionKeyName, u.Name);
             HttpContext.Session.SetInt32(SessionKeyLoggedIn, 1);
+            HttpContext.Session.SetInt32(SessionKeyID, u.ID);
 
             return View("Details", u);
         }
@@ -49,6 +51,7 @@ namespace WebStore.Controllers
         {
             HttpContext.Session.SetString(SessionKeyName, "");
             HttpContext.Session.SetInt32(SessionKeyLoggedIn, 0);
+            HttpContext.Session.SetInt32(SessionKeyID, 0);
 
             return View("LogIn");
         }
@@ -65,7 +68,7 @@ namespace WebStore.Controllers
             if (!ModelState.IsValid) return View(user);
 
             await _accessProvider.AddUser(user);
-            return RedirectToAction("Index");
+            return RedirectToAction("Register");
         }
 
         // GET: Users/Details/5
@@ -91,9 +94,6 @@ namespace WebStore.Controllers
             return View();
         }
 
-        // POST: Users/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Admin,Name,Email,Password,AddressOne,AddressTwo")] User user)
@@ -101,7 +101,7 @@ namespace WebStore.Controllers
             if (ModelState.IsValid)
             {
                 await _accessProvider.AddUser(user);
-                return RedirectToAction("Index");
+                return RedirectToAction("LogIn");
             }
             return View(user);
         }
@@ -122,9 +122,6 @@ namespace WebStore.Controllers
             return View(user);
         }
 
-        // POST: Users/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Admin,Name,Email,Password,AddressOne,AddressTwo")] User user)
@@ -151,7 +148,7 @@ namespace WebStore.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction("LogIn");
             }
             return View(user);
         }
@@ -180,7 +177,7 @@ namespace WebStore.Controllers
         {
             var user = await _accessProvider.GetUser(id);
             await _accessProvider.DeleteUser(user);
-            return RedirectToAction("Index");
+            return RedirectToAction("Details");
         }
 
         private async Task<bool> UserExists(int id)

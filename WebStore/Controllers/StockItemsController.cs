@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebStore.Data;
+using WebStore.Helpers;
 using WebStore.Models;
 
 namespace WebStore.Controllers
@@ -99,7 +101,7 @@ namespace WebStore.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!StockItemExists(stockItem.ID))
+                    if (! await StockItemExists(stockItem.ID))
                     {
                         return NotFound();
                     }
@@ -145,6 +147,40 @@ namespace WebStore.Controllers
         {
             var item = await _accessProvider.GetItem(id);
             return await _accessProvider.CheckForItem(item);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment()
+        {
+            string title = HttpContext.Request.Form["title"];
+            string text = HttpContext.Request.Form["text"];
+            int id = (int) HttpContext.Session.GetInt32("_ID");
+            var user = await _accessProvider.GetUser(id);
+            int itemId = int.Parse(HttpContext.Request.Form["itemID"]);
+            var item = await _accessProvider.GetItem(itemId);
+
+            var comment = new Comment {Title=title, Text=text, StockItemId = itemId, UserId = id, User = user, StockItem = item };
+            await _accessProvider.AddComment(comment);
+
+            return View("Details", item);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddRating()
+        {
+            int id = (int)HttpContext.Session.GetInt32("_ID");
+            var user = await _accessProvider.GetUser(id);
+            int itemId = int.Parse(HttpContext.Request.Form["itemID"]);
+            var item = await _accessProvider.GetItem(itemId);
+            var rating = HttpContext.Request.Form["rating"];
+            int value = NumberConverter.ConvertStringToInt(rating);
+
+            var score = new Rating {Score = value, User = user, StockItem = item, UserId = id, StockItemId = itemId};
+            await _accessProvider.AddRating(score);
+
+            return View("Details", item);
         }
     }
 }
