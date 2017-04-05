@@ -11,7 +11,7 @@ namespace WebStore.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<StockItem> StockItmes { get; set; }
+        public DbSet<StockItem> StockItems { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<Comment> Comments { get; set; }
 

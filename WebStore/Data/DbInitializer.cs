@@ -39,7 +39,7 @@ namespace WebStore.Data
 
             foreach (var item in items)
             {
-                context.StockItmes.Add(item);
+                context.StockItems.Add(item);
             }
 
             context.SaveChanges();

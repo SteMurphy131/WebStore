@@ -22,9 +22,17 @@ namespace WebStore.Controllers
         }
 
         // GET: StockItems
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder, string searchString)
         {
-            return View(await _accessProvider.GetAllItems());
+            @ViewData["currentFilter"] = searchString;
+            IQueryable<StockItem> items = _accessProvider.GetAllItems();
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                items = _accessProvider.GetItemsByCategory(searchString);
+            }
+
+            return View(_accessProvider.SortItems(items, sortOrder).ToList());
         }
 
         // GET: StockItems/Details/5
@@ -50,9 +58,6 @@ namespace WebStore.Controllers
             return View();
         }
 
-        // POST: StockItems/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Title,Manufacturer,Price,Category,ImageUrl")] StockItem stockItem)
@@ -81,9 +86,7 @@ namespace WebStore.Controllers
             return View(stockItem);
         }
 
-        // POST: StockItems/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Manufacturer,Price,Category,ImageUrl")] StockItem stockItem)
@@ -153,12 +156,13 @@ namespace WebStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment()
         {
+            int id = (int)HttpContext.Session.GetInt32("_ID");
             string title = HttpContext.Request.Form["title"];
             string text = HttpContext.Request.Form["text"];
-            int id = (int) HttpContext.Session.GetInt32("_ID");
-            var user = await _accessProvider.GetUser(id);
             int itemId = int.Parse(HttpContext.Request.Form["itemID"]);
+
             var item = await _accessProvider.GetItem(itemId);
+            var user = await _accessProvider.GetUser(id);
 
             var comment = new Comment {Title=title, Text=text, StockItemId = itemId, UserId = id, User = user, StockItem = item };
             await _accessProvider.AddComment(comment);
@@ -171,10 +175,11 @@ namespace WebStore.Controllers
         public async Task<IActionResult> AddRating()
         {
             int id = (int)HttpContext.Session.GetInt32("_ID");
-            var user = await _accessProvider.GetUser(id);
             int itemId = int.Parse(HttpContext.Request.Form["itemID"]);
-            var item = await _accessProvider.GetItem(itemId);
             var rating = HttpContext.Request.Form["rating"];
+
+            var user = await _accessProvider.GetUser(id);
+            var item = await _accessProvider.GetItem(itemId);
             int value = NumberConverter.ConvertStringToInt(rating);
 
             var score = new Rating {Score = value, User = user, StockItem = item, UserId = id, StockItemId = itemId};

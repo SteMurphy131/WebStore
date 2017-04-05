@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using WebStore.Models;
 
@@ -24,7 +25,10 @@ namespace WebStore.Data
         Task<bool> CheckForUser(User u);
         Task<bool> CheckForItem(StockItem item);
         Task<User> LogIn(User u);
-        Task<IEnumerable<StockItem>> GetAllItems();
+        IQueryable<StockItem> GetAllItems();
+        IQueryable<StockItem> GetItemsByCategory(string category);
+        IQueryable<StockItem> GetItemsByManufacturer(string man);
+        IEnumerable<StockItem> SortItems(IQueryable<StockItem> items, string sortString);
         WebStoreContext GetContext();
     }
 }

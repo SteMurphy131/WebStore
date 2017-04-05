@@ -6,23 +6,38 @@
 
 <h2>Index</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <p>
+            Find by name: <input type="text" name="SearchString" value="@ViewData["currentFilter"]" />
+            <input type="submit" value="Search" class="btn btn-default" /> |
+            <a asp-action="Index">Back to Full List</a>
+        </p>
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
                 <th>
                     @Html.DisplayNameFor(model => model.Title)
+                    <a asp-action="Index" asp-route-sortOrder="titleAsc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                    <a asp-action="Index" asp-route-sortOrder="titleDesc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-down"></span></a>
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Manufacturer)
+                    <a asp-action="Index" asp-route-sortOrder="manAsc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                    <a asp-action="Index" asp-route-sortOrder="manDesc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-down"></span></a>
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Price)
+                    <a asp-action="Index" asp-route-sortOrder="priceAsc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                    <a asp-action="Index" asp-route-sortOrder="priceDesc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-down"></span></a>
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Category)
+                    <a asp-action="Index" asp-route-sortOrder="categoryAsc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                    <a asp-action="Index" asp-route-sortOrder="categoryDesc" asp-route-searchString="@ViewData["currentFilter"]"><span class="glyphicon glyphicon-arrow-down"></span></a>
                 </th>
                 <th>
                     Image

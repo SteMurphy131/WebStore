@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WebStore.Models;
+using WebStore.Helpers;
 
 namespace WebStore.Data
 {
@@ -29,7 +32,7 @@ namespace WebStore.Data
         {
             if (await CheckForItem(item))
             {
-                _context.StockItmes.Add(item);
+                _context.StockItems.Add(item);
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -57,7 +60,7 @@ namespace WebStore.Data
 
         public async Task<StockItem> GetItem(string name)
         {
-            return await _context.StockItmes.Include(i => i.Comments).Include(i => i.Ratings).SingleOrDefaultAsync(i => i.Title == name);
+            return await _context.StockItems.Include(i => i.Comments).Include(i => i.Ratings).SingleOrDefaultAsync(i => i.Title == name);
         }
 
         public async Task<User> LogIn(User u)
@@ -70,9 +73,9 @@ namespace WebStore.Data
             return await _context.Users.AllAsync(user => u.Name != user.Name);
         }
 
-        public async Task<IEnumerable<StockItem>> GetAllItems()
+        public IQueryable<StockItem> GetAllItems()
         {
-            return await _context.StockItmes.ToListAsync();
+            return _context.StockItems;
         }
 
         public WebStoreContext GetContext()
@@ -82,7 +85,7 @@ namespace WebStore.Data
 
         public async Task<StockItem> UpdateItem(StockItem item)
         {
-            _context.StockItmes.Update(item);
+            _context.StockItems.Update(item);
             await _context.SaveChangesAsync();
             return item;
         }
@@ -118,8 +121,8 @@ namespace WebStore.Data
 
         public async Task<StockItem> DeleteItem(StockItem item)
         {
-            var entity = await _context.StockItmes.FirstAsync(i => i.ID == item.ID);
-            _context.StockItmes.Remove(entity);
+            var entity = await _context.StockItems.FirstAsync(i => i.ID == item.ID);
+            _context.StockItems.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
@@ -147,14 +150,49 @@ namespace WebStore.Data
 
         public async Task<StockItem> GetItem(int name)
         {
-            return await _context.StockItmes.Include(s => s.Comments)
+            return await _context.StockItems.Include(s => s.Comments)
                     .Include(s => s.Ratings)
                     .SingleOrDefaultAsync(i => i.ID == name);
         }
 
         public async Task<bool> CheckForItem(StockItem item)
         {
-            return await _context.StockItmes.AllAsync(i => i.Title != item.Title);
+            return await _context.StockItems.AllAsync(i => i.Title != item.Title);
+        }
+
+        public IQueryable<StockItem> GetItemsByCategory(string category)
+        {
+            return _context.StockItems.Where(i => i.Category.Contains(category, StringComparison.OrdinalIgnoreCase) || i.Title.Contains(category, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public IQueryable<StockItem> GetItemsByManufacturer(string man)
+        {
+            return _context.StockItems.Where(i => i.Manufacturer.Contains(man));
+        }
+
+        public IEnumerable<StockItem> SortItems(IQueryable<StockItem> items, string sortString)
+        {
+            switch (sortString)
+            {
+                case "titleAsc":
+                    return items.OrderBy(i => i.Title);
+                case "titleDesc":
+                    return items.OrderByDescending(i => i.Title);
+                case "categoryAsc":
+                    return items.OrderBy(i => i.Category);
+                case "categoryDesc":
+                    return items.OrderByDescending(i => i.Category);
+                case "priceAsc":
+                    return items.OrderBy(i => i.Price);
+                case "priceDesc":
+                    return items.OrderByDescending(i => i.Price);
+                case "manAsc":
+                    return items.OrderBy(i => i.Manufacturer);
+                case "manDesc":
+                    return items.OrderByDescending(i => i.Manufacturer);
+                default:
+                    return items;
+            }
         }
     }
 }
