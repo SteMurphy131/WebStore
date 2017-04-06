@@ -2,6 +2,8 @@
 @inject Microsoft.ApplicationInsights.AspNetCore.JavaScriptSnippet JavaScriptSnippet
 @{
     bool loggedIn = Context.Session.GetInt32("_Logged") == 1;
+    bool admin = Context.Session.GetInt32("_Admin") == 1;
+    int? id = Context.Session.GetInt32("_ID");
 }
 
 <!DOCTYPE html>
@@ -36,15 +38,20 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            if(admin){<span class="icon-bar"></span>}
                         </button>
                         <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">WebStore</a>
                     </div>
                     <div class="navbar-collapse collapse">
                         <ul class="nav navbar-nav">
-                            <li><a asp-area="" asp-controller="Users" asp-action="Details">Profile</a></li>
+                            <li><a asp-area="" asp-controller="Users" asp-action="Details" asp-route-id="@id">Profile</a></li>
                             <li><a asp-area="" asp-controller="Users" asp-action="LogOut">Log Out</a></li>
                             <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
                             <li><a asp-area="" asp-controller="StockItems" asp-action="Index">Items</a></li>
+                            @if (admin) {<li><a asp-area="" asp-controller="Users" asp-action="Index">Users</a></li> }
+                            else{<li class="pull-right"><a asp-area="" asp-controller="ShoppingCarts" asp-action="Details">Cart</a></li>}
+                            
                         </ul>
                     </div>
                 </div>

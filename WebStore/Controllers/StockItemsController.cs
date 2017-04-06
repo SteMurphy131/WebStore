@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using WebStore.Data;
 using WebStore.Helpers;
 using WebStore.Models;
@@ -14,6 +15,11 @@ namespace WebStore.Controllers
 {
     public class StockItemsController : Controller
     {
+        private const string SessionKeyName = "_Name";
+        private const string SessionKeyID = "_ID";
+        private const string SessionKeyLoggedIn = "_Logged";
+        private const string SessionKeyCart = "_Cart";
+
         private readonly IDataAccessProvider _accessProvider;
 
         public StockItemsController(IDataAccessProvider context)
@@ -52,7 +58,7 @@ namespace WebStore.Controllers
             return View(stockItem);
         }
 
-        // GET: StockItems/Create
+        // GET: StockItems/Register
         public IActionResult Create()
         {
             return View();
@@ -60,7 +66,7 @@ namespace WebStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Title,Manufacturer,Price,Category,ImageUrl")] StockItem stockItem)
+        public async Task<IActionResult> Create([Bind("ID,Title,Manufacturer,Price,Category,ImageUrl, StockLevel")] StockItem stockItem)
         {
             if (ModelState.IsValid)
             {
@@ -89,7 +95,7 @@ namespace WebStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Manufacturer,Price,Category,ImageUrl")] StockItem stockItem)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Manufacturer,Price,Category,ImageUrl, StockLevel")] StockItem stockItem)
         {
             if (id != stockItem.ID)
             {
@@ -187,5 +193,54 @@ namespace WebStore.Controllers
 
             return View("Details", item);
         }
+
+        public async Task<IActionResult> AddToCart(int id)
+        {
+            var str = HttpContext.Session.GetString(SessionKeyCart);
+            var obj = JsonConvert.DeserializeObject<ShoppingCart>(str);
+
+            var item = await _accessProvider.GetItem(id);
+
+            obj.Items.Add(item);
+
+            var jsonCart = JsonConvert.SerializeObject(obj);
+            HttpContext.Session.SetString(SessionKeyCart, jsonCart);
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Purchase()
+        {
+            int userId = (int) HttpContext.Session.GetInt32(SessionKeyID);
+            var user = await _accessProvider.GetUser(userId);
+
+            var str = HttpContext.Session.GetString(SessionKeyCart);
+            var cart = JsonConvert.DeserializeObject<ShoppingCart>(str);
+
+            var purchase = new Purchase { UserID = userId, User = user, TotalPrice = cart.Items.Sum(i => i.Price) };
+            var purchaseItems = new List<PurchaseItem>();
+
+            foreach (var item in cart.Items)
+            {
+                var stockItem = await _accessProvider.GetItem(item.ID);
+                stockItem.StockLevel--;
+                await _accessProvider.UpdateItem(stockItem);
+                var purchaseItem = new PurchaseItem { Purchase = purchase, StockItem = item};
+                purchaseItems.Add(purchaseItem);
+            }
+
+            purchase.PurchaseItems = purchaseItems;
+
+            cart.Items.Clear();
+            var jsonCart = JsonConvert.SerializeObject(cart);
+            HttpContext.Session.SetString(SessionKeyCart, jsonCart);
+
+            await _accessProvider.AddPurchase(purchase);
+            
+            return RedirectToAction("Index");
+        }
     }
 }
+

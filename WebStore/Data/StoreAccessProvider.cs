@@ -53,9 +53,23 @@ namespace WebStore.Data
             return true;
         }
 
+        public async Task<bool> AddPurchase(Purchase purchase)
+        {
+            await _context.Purchases.AddAsync(purchase);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> AddPurchaseItem(PurchaseItem pItem)
+        {
+            await _context.PurchaseItems.AddAsync(pItem);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<User> GetUser(string name)
         {
-            return await _context.Users.SingleOrDefaultAsync(u => u.Name == name);
+            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.Name == name);
         }
 
         public async Task<StockItem> GetItem(string name)
@@ -71,6 +85,11 @@ namespace WebStore.Data
         public async Task<bool> CheckForUser(User u)
         {
             return await _context.Users.AllAsync(user => u.Name != user.Name);
+        }
+
+        public IQueryable<User> GetAllUsers()
+        {
+            return _context.Users;
         }
 
         public IQueryable<StockItem> GetAllItems()
@@ -145,7 +164,7 @@ namespace WebStore.Data
 
         public async Task<User> GetUser(int name)
         {
-            return await _context.Users.SingleOrDefaultAsync(u => u.ID == name);
+            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.ID == name);
         }
 
         public async Task<StockItem> GetItem(int name)

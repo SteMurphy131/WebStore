@@ -1,0 +1,63 @@
+@model WebStore.Models.ShoppingCart
+
+@{
+    ViewData["Title"] = "Details";
+    var total = Model.Items.Sum(item => item.Price);
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>ShoppingCart</h4>
+    <hr />
+    <table class="table">
+        <thead>
+        <tr>
+            <th>
+                Title
+            </th>
+            <th>
+                Manufacturer
+            </th>
+            <th>
+                Price
+            </th>
+            <th>
+                Category
+            </th>
+            <th>
+                Image
+            </th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Manufacturer)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Category)
+                </td>
+                <td>
+                    <img src="@item.ImageUrl" height="50" width="50" alt="@item.Title" />
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+<p class ="text-center">Total Price: @total</p>
+<div>
+    <form asp-controller="StockItems" asp-action="Purchase" asp-route-cart="@Model" method="post">
+        <input type="submit" value="Purchase All"/>
+    </form>
+</div>

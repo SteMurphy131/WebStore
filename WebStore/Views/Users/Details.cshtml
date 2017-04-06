@@ -1,7 +1,10 @@
+@using Microsoft.AspNetCore.Http
 @model WebStore.Models.User
 
 @{
     ViewData["Title"] = "Details";
+    bool admin = Context.Session.GetInt32("_Admin") == 1;
+    bool purchases = @Model.Purchases != null;
 }
 
 <h2>Details</h2>
@@ -48,6 +51,29 @@
         </dd>
     </dl>
 </div>
+@if (admin && purchases)
+{
+    <div class="container">
+        <h2>Purchase History</h2>
+        @foreach (var p in Model.Purchases)
+        {
+            <div class="panel center-block col-md-12">
+                <div class="panel-heading">
+                    Total Price: @p.TotalPrice
+                </div>
+                <div class="panel-body">
+                    @foreach (var item in p.PurchaseItems)
+                    {
+                        <p>Title: @item.StockItem.Title</p>
+                        <p>Price: @item.StockItem.Price</p>
+                        <img src="@item.StockItem.ImageUrl" alt="@item.StockItem.Title" height="100" widht="100"/>
+                    }
+                </div>
+            </div>   
+        }
+    </div>
+}
+
 <div>
     <a asp-action="Edit" asp-route-id="@Model.ID">Edit</a>
 </div>

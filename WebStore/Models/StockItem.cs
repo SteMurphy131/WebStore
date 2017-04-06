@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace WebStore.Models
 {
@@ -10,8 +11,13 @@ namespace WebStore.Models
         public double Price { get; set; }
         public string Category { get; set; }
         public string ImageUrl { get; set; }
+        public int StockLevel { get; set; }
 
-        public ICollection<Rating> Ratings { get; set; }
-        public ICollection<Comment> Comments { get; set; }
+        [JsonIgnore]
+        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
+        [JsonIgnore]
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+        [JsonIgnore]
+        public ICollection<PurchaseItem> Purchases { get; set; } = new List<PurchaseItem>();
     }
 }
