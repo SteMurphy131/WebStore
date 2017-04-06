@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using WebStore.Data;
@@ -15,11 +14,6 @@ namespace WebStore.Controllers
 {
     public class StockItemsController : Controller
     {
-        private const string SessionKeyName = "_Name";
-        private const string SessionKeyID = "_ID";
-        private const string SessionKeyLoggedIn = "_Logged";
-        private const string SessionKeyCart = "_Cart";
-
         private readonly IDataAccessProvider _accessProvider;
 
         public StockItemsController(IDataAccessProvider context)
@@ -28,7 +22,7 @@ namespace WebStore.Controllers
         }
 
         // GET: StockItems
-        public async Task<IActionResult> Index(string sortOrder, string searchString)
+        public IActionResult Index(string sortOrder, string searchString)
         {
             @ViewData["currentFilter"] = searchString;
             IQueryable<StockItem> items = _accessProvider.GetAllItems();
@@ -44,11 +38,6 @@ namespace WebStore.Controllers
         // GET: StockItems/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var stockItem = await _accessProvider.GetItem(id);
             if (stockItem == null)
             {
@@ -68,22 +57,16 @@ namespace WebStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,Title,Manufacturer,Price,Category,ImageUrl, StockLevel")] StockItem stockItem)
         {
-            if (ModelState.IsValid)
-            {
-                await _accessProvider.AddStockItem(stockItem);
-                return RedirectToAction("Index");
-            }
-            return View(stockItem);
+            if (!ModelState.IsValid)
+                return View(stockItem);
+
+            await _accessProvider.AddStockItem(stockItem);
+            return RedirectToAction("Index");
         }
 
         // GET: StockItems/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var stockItem = await _accessProvider.GetItem(id);
             if (stockItem == null)
             {
@@ -127,11 +110,6 @@ namespace WebStore.Controllers
         // GET: StockItems/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var stockItem = await _accessProvider.GetItem(id);
             
             if (stockItem == null)
@@ -196,7 +174,7 @@ namespace WebStore.Controllers
 
         public async Task<IActionResult> AddToCart(int id)
         {
-            var str = HttpContext.Session.GetString(SessionKeyCart);
+            var str = HttpContext.Session.GetString(SessionKeys.Cart);
             var obj = JsonConvert.DeserializeObject<ShoppingCart>(str);
 
             var item = await _accessProvider.GetItem(id);
@@ -204,7 +182,7 @@ namespace WebStore.Controllers
             obj.Items.Add(item);
 
             var jsonCart = JsonConvert.SerializeObject(obj);
-            HttpContext.Session.SetString(SessionKeyCart, jsonCart);
+            HttpContext.Session.SetString(SessionKeys.Cart, jsonCart);
 
             return RedirectToAction("Index");
         }
@@ -213,10 +191,10 @@ namespace WebStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Purchase()
         {
-            int userId = (int) HttpContext.Session.GetInt32(SessionKeyID);
+            int userId = (int) HttpContext.Session.GetInt32(SessionKeys.Id);
             var user = await _accessProvider.GetUser(userId);
 
-            var str = HttpContext.Session.GetString(SessionKeyCart);
+            var str = HttpContext.Session.GetString(SessionKeys.Cart);
             var cart = JsonConvert.DeserializeObject<ShoppingCart>(str);
 
             var purchase = new Purchase { UserID = userId, User = user, TotalPrice = cart.Items.Sum(i => i.Price) };
@@ -235,7 +213,7 @@ namespace WebStore.Controllers
 
             cart.Items.Clear();
             var jsonCart = JsonConvert.SerializeObject(cart);
-            HttpContext.Session.SetString(SessionKeyCart, jsonCart);
+            HttpContext.Session.SetString(SessionKeys.Cart, jsonCart);
 
             await _accessProvider.AddPurchase(purchase);
             

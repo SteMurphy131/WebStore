@@ -1,9 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Http
+@using WebStore.Helpers
 @inject Microsoft.ApplicationInsights.AspNetCore.JavaScriptSnippet JavaScriptSnippet
 @{
-    bool loggedIn = Context.Session.GetInt32("_Logged") == 1;
-    bool admin = Context.Session.GetInt32("_Admin") == 1;
-    int? id = Context.Session.GetInt32("_ID");
+    bool loggedIn = Context.Session.GetInt32(SessionKeys.LoggedIn) == 1;
+    bool admin = Context.Session.GetInt32(SessionKeys.Admin) == 1;
+    int? id = Context.Session.GetInt32(SessionKeys.Id);
 }
 
 <!DOCTYPE html>

@@ -5,18 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using WebStore.Data;
+using WebStore.Helpers;
 using WebStore.Models;
 
 namespace WebStore.Controllers
 {
     public class UsersController : Controller
     {
-        private const string SessionKeyName = "_Name";
-        private const string SessionKeyId = "_ID";
-        private const string SessionKeyLoggedIn = "_Logged";
-        private const string SessionKeyCart = "_Cart";
-        private const string SessionKeyAdmin = "_Admin";
-
         private readonly IDataAccessProvider _accessProvider;
 
         public UsersController(IDataAccessProvider context)
@@ -48,11 +43,11 @@ namespace WebStore.Controllers
             var cart = new ShoppingCart { UserID = u.ID, Items = new List<StockItem>() };
             var json = JsonConvert.SerializeObject(cart);
 
-            HttpContext.Session.SetString(SessionKeyName, u.Name);
-            HttpContext.Session.SetInt32(SessionKeyLoggedIn, 1);
-            HttpContext.Session.SetInt32(SessionKeyId, u.ID);
-            HttpContext.Session.SetString(SessionKeyCart, json);
-            HttpContext.Session.SetInt32(SessionKeyAdmin, u.Admin ? 1 : 0);
+            HttpContext.Session.SetString(SessionKeys.Name, u.Name);
+            HttpContext.Session.SetInt32(SessionKeys.LoggedIn, 1);
+            HttpContext.Session.SetInt32(SessionKeys.Id, u.ID);
+            HttpContext.Session.SetString(SessionKeys.Cart, json);
+            HttpContext.Session.SetInt32(SessionKeys.Admin, u.Admin ? 1 : 0);
 
 
             return View("Details", u);
@@ -60,9 +55,9 @@ namespace WebStore.Controllers
 
         public IActionResult LogOut()
         {
-            HttpContext.Session.SetString(SessionKeyName, "");
-            HttpContext.Session.SetInt32(SessionKeyLoggedIn, 0);
-            HttpContext.Session.SetInt32(SessionKeyId, 0);
+            HttpContext.Session.SetString(SessionKeys.Name, "");
+            HttpContext.Session.SetInt32(SessionKeys.LoggedIn, 0);
+            HttpContext.Session.SetInt32(SessionKeys.Id, 0);
 
             return View("LogIn");
         }

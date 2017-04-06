@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebStore.Models;
@@ -22,8 +21,8 @@ namespace WebStore.Data
         Task<StockItem> DeleteItem(StockItem item);
         Task<Rating> DeleteRating(Rating rating);
         Task<Comment> DeleteComment(Comment comment);
-        Task<User> GetUser(int name);
-        Task<StockItem> GetItem(int name);
+        Task<User> GetUser(int id);
+        Task<StockItem> GetItem(int id);
         Task<bool> CheckForUser(User u);
         Task<bool> CheckForItem(StockItem item);
         Task<User> LogIn(User u);

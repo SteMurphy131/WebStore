@@ -67,16 +67,6 @@ namespace WebStore.Data
             return true;
         }
 
-        public async Task<User> GetUser(string name)
-        {
-            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.Name == name);
-        }
-
-        public async Task<StockItem> GetItem(string name)
-        {
-            return await _context.StockItems.Include(i => i.Comments).Include(i => i.Ratings).SingleOrDefaultAsync(i => i.Title == name);
-        }
-
         public async Task<User> LogIn(User u)
         {
             return await _context.Users.SingleOrDefaultAsync(user => u.Name == user.Name && u.Password == user.Password);
@@ -162,16 +152,16 @@ namespace WebStore.Data
             return entity;
         }
 
-        public async Task<User> GetUser(int name)
+        public async Task<User> GetUser(int id)
         {
-            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.ID == name);
+            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.ID == id);
         }
-
-        public async Task<StockItem> GetItem(int name)
+        
+        public async Task<StockItem> GetItem(int id)
         {
             return await _context.StockItems.Include(s => s.Comments)
                     .Include(s => s.Ratings)
-                    .SingleOrDefaultAsync(i => i.ID == name);
+                    .SingleOrDefaultAsync(i => i.ID == id);
         }
 
         public async Task<bool> CheckForItem(StockItem item)

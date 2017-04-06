@@ -1,10 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Http
+@using WebStore.Helpers
 @model IEnumerable<WebStore.Models.User>
 
 
 @{
     ViewData["Title"] = "Index";
-    bool admin = Context.Session.GetInt32("_Admin") == 1;
+    bool admin = Context.Session.GetInt32(SessionKeys.Admin) == 1;
 }
 
 <h2>Index</h2>
