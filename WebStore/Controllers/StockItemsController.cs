@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using WebStore.Data;
 using WebStore.Helpers;
 using WebStore.Models;
+using WebStore.Patterns;
 
 namespace WebStore.Controllers
 {
@@ -27,7 +28,7 @@ namespace WebStore.Controllers
             @ViewData["currentFilter"] = searchString;
             IQueryable<StockItem> items = _accessProvider.GetAllItems();
 
-            if (!String.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchString))
             {
                 items = _accessProvider.GetItemsByCategory(searchString);
             }
@@ -75,7 +76,6 @@ namespace WebStore.Controllers
             return View(stockItem);
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Manufacturer,Price,Category,ImageUrl, StockLevel")] StockItem stockItem)
@@ -94,13 +94,9 @@ namespace WebStore.Controllers
                 catch (DbUpdateConcurrencyException)
                 {
                     if (! await StockItemExists(stockItem.ID))
-                    {
                         return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    
+                    throw; 
                 }
                 return RedirectToAction("Index");
             }
@@ -193,23 +189,16 @@ namespace WebStore.Controllers
         {
             int userId = (int) HttpContext.Session.GetInt32(SessionKeys.Id);
             var user = await _accessProvider.GetUser(userId);
-
             var str = HttpContext.Session.GetString(SessionKeys.Cart);
             var cart = JsonConvert.DeserializeObject<ShoppingCart>(str);
 
-            var purchase = new Purchase { UserID = userId, User = user, TotalPrice = cart.Items.Sum(i => i.Price) };
-            var purchaseItems = new List<PurchaseItem>();
+            var builder = new PurchaseBuilder();
+            Purchase purchase = builder.CreatePurchase(userId)
+                .WithUser(user)
+                .WithPurchaseItems(cart.Items)
+                .Build();
 
-            foreach (var item in cart.Items)
-            {
-                var stockItem = await _accessProvider.GetItem(item.ID);
-                stockItem.StockLevel--;
-                await _accessProvider.UpdateItem(stockItem);
-                var purchaseItem = new PurchaseItem { Purchase = purchase, StockItem = item};
-                purchaseItems.Add(purchaseItem);
-            }
-
-            purchase.PurchaseItems = purchaseItems;
+            await PurchaseManager.ProcessPurchase(_accessProvider, cart);
 
             cart.Items.Clear();
             var jsonCart = JsonConvert.SerializeObject(cart);

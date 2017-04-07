@@ -33,7 +33,8 @@ namespace WebStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogIn([Bind("Name, Password, ConfirmPassword, Email, ConfirmEmail")] User user)
         {
-            if (user.Name == null || user.Password == null) return View("LogIn");
+            if (user.Name == null || user.Password == null)
+                return View("LogIn");
 
             User u = await _accessProvider.LogIn(user);
 
@@ -58,6 +59,8 @@ namespace WebStore.Controllers
             HttpContext.Session.SetString(SessionKeys.Name, "");
             HttpContext.Session.SetInt32(SessionKeys.LoggedIn, 0);
             HttpContext.Session.SetInt32(SessionKeys.Id, 0);
+            HttpContext.Session.SetString(SessionKeys.Cart, "");
+            HttpContext.Session.SetInt32(SessionKeys.Admin, 0);
 
             return View("LogIn");
         }
@@ -69,34 +72,32 @@ namespace WebStore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register([Bind("Username,Password,ConfirmPassword,Email,ConfirmEmail")] User user)
+        public async Task<IActionResult> Register([Bind("Name, Email, Password, AddressOne, AddressTwo")] User user)
         {
-            if (!ModelState.IsValid) return View(user);
+            if (!ModelState.IsValid)
+                return View(user);
 
             await _accessProvider.AddUser(user);
             return RedirectToAction("LogIn");
         }
 
-        // GET: Users/Details/5
         public async Task<IActionResult> Details(int id)
         {
             var user = await _accessProvider.GetUser(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
 
+            if (user == null)
+                return NotFound();
+            
             return View(user);
         }
 
-        // GET: Users/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
             var user = await _accessProvider.GetUser(id);
+
             if (user == null)
-            {
                 return NotFound();
-            }
+            
             return View(user);
         }
 
@@ -105,46 +106,37 @@ namespace WebStore.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("ID,Admin,Name,Email,Password,AddressOne,AddressTwo")] User user)
         {
             if (id != user.ID)
-            {
                 return NotFound();
-            }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(user);
+
+            try
             {
-                try
-                {
-                    await _accessProvider.UpdateUser(user);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (! await UserExists(user.ID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction("LogIn");
+                await _accessProvider.UpdateUser(user);
             }
-            return View(user);
-        }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (! await UserExists(user.ID))
+                    return NotFound();
+                
+                throw; 
+            }
 
-        // GET: Users/Delete/5
+            return RedirectToAction("LogIn");
+        }
+        
         public async Task<IActionResult> Delete(int id)
         {
             var u = await _accessProvider.GetUser(id);
             var user = await _accessProvider.DeleteUser(u);
-            if (user == null)
-            {
-                return NotFound();
-            }
 
+            if (user == null)
+                return NotFound();
+            
             return View(user);
         }
 
-        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
