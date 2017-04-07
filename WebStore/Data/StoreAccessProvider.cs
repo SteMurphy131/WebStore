@@ -19,24 +19,22 @@ namespace WebStore.Data
 
         public async Task<bool> AddUser(User user)
         {
-            if (await CheckForUser(user))
-            {
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            return false;
+            if (!await CheckForUser(user))
+                return false;
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> AddStockItem(StockItem item)
         {
-            if (await CheckForItem(item))
-            {
-                _context.StockItems.Add(item);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            return false;
+            if (!await CheckForItem(item))
+                return false;
+
+            _context.StockItems.Add(item);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> AddComment(Comment comment)
@@ -69,7 +67,8 @@ namespace WebStore.Data
 
         public async Task<User> LogIn(User u)
         {
-            return await _context.Users.SingleOrDefaultAsync(user => u.Name == user.Name && u.Password == user.Password);
+            return await _context.Users
+                .SingleOrDefaultAsync(user => u.Name == user.Name && u.Password == user.Password);
         }
 
         public async Task<bool> CheckForUser(User u)
@@ -122,7 +121,9 @@ namespace WebStore.Data
 
         public async Task<User> DeleteUser(User user)
         {
-            var entity = await _context.Users.FirstAsync(u => u.Name == user.Name);
+            var entity = await _context.Users
+                .FirstAsync(u => u.Name == user.Name);
+
             _context.Users.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -130,7 +131,9 @@ namespace WebStore.Data
 
         public async Task<StockItem> DeleteItem(StockItem item)
         {
-            var entity = await _context.StockItems.FirstAsync(i => i.ID == item.ID);
+            var entity = await _context.StockItems
+                .FirstAsync(i => i.ID == item.ID);
+
             _context.StockItems.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -138,7 +141,9 @@ namespace WebStore.Data
 
         public async Task<Rating> DeleteRating(Rating rating)
         {
-            var entity = await _context.Ratings.FirstAsync(r => r.ID == rating.ID);
+            var entity = await _context.Ratings
+                .FirstAsync(r => r.ID == rating.ID);
+
             _context.Ratings.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -146,7 +151,9 @@ namespace WebStore.Data
 
         public async Task<Comment> DeleteComment(Comment comment)
         {
-            var entity = await _context.Comments.FirstAsync(c => c.ID == comment.ID);
+            var entity = await _context.Comments
+                .FirstAsync(c => c.ID == comment.ID);
+
             _context.Comments.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
@@ -154,29 +161,39 @@ namespace WebStore.Data
 
         public async Task<User> GetUser(int id)
         {
-            return await _context.Users.Include(u => u.Purchases).ThenInclude(p => p.PurchaseItems).ThenInclude(pi => pi.StockItem).SingleOrDefaultAsync(u => u.ID == id);
+            return await _context.Users
+                .Include(u => u.Purchases)
+                .ThenInclude(p => p.PurchaseItems)
+                .ThenInclude(pi => pi.StockItem)
+                .SingleOrDefaultAsync(u => u.ID == id);
         }
         
         public async Task<StockItem> GetItem(int id)
         {
-            return await _context.StockItems.Include(s => s.Comments)
-                    .Include(s => s.Ratings)
-                    .SingleOrDefaultAsync(i => i.ID == id);
+            return await _context.StockItems
+                .Include(s => s.Comments)
+                .ThenInclude(c => c.User)
+                .Include(s => s.Ratings)
+                .ThenInclude(r => r.User)
+                .SingleOrDefaultAsync(i => i.ID == id);
         }
 
         public async Task<bool> CheckForItem(StockItem item)
         {
-            return await _context.StockItems.AllAsync(i => i.Title != item.Title);
+            return await _context.StockItems
+                .AllAsync(i => i.Title != item.Title);
         }
 
         public IQueryable<StockItem> GetItemsByCategory(string category)
         {
-            return _context.StockItems.Where(i => i.Category.Contains(category, StringComparison.OrdinalIgnoreCase) || i.Title.Contains(category, StringComparison.OrdinalIgnoreCase));
+            return _context.StockItems
+                .Where(i => i.Category.Contains(category, StringComparison.OrdinalIgnoreCase) || i.Title.Contains(category, StringComparison.OrdinalIgnoreCase));
         }
 
         public IQueryable<StockItem> GetItemsByManufacturer(string man)
         {
-            return _context.StockItems.Where(i => i.Manufacturer.Contains(man));
+            return _context.StockItems
+                .Where(i => i.Manufacturer.Contains(man));
         }
 
         public IEnumerable<StockItem> SortItems(IQueryable<StockItem> items, string sortString)

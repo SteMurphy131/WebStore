@@ -9,7 +9,8 @@ namespace WebStore.Data
         {
             context.Database.EnsureCreated();
 
-            if (context.Users.Any()) { return;}
+            if (context.Users.Any())
+                return;
 
             var users = new []
             {
@@ -18,9 +19,8 @@ namespace WebStore.Data
             };
 
             foreach (var user in users)
-            {
                 context.Users.Add(user);
-            }
+            
             context.SaveChanges();
 
             var items = new[]
@@ -38,10 +38,8 @@ namespace WebStore.Data
             };
 
             foreach (var item in items)
-            {
                 context.StockItems.Add(item);
-            }
-
+            
             context.SaveChanges();
         }
     }

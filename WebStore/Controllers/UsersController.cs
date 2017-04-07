@@ -84,7 +84,6 @@ namespace WebStore.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var user = await _accessProvider.GetUser(id);
-
             if (user == null)
                 return NotFound();
             
@@ -94,7 +93,6 @@ namespace WebStore.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var user = await _accessProvider.GetUser(id);
-
             if (user == null)
                 return NotFound();
             

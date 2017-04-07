@@ -19,7 +19,9 @@ namespace WebStore.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<PurchaseItem>().HasKey(pi => new { pi.PurchaseId, pi.StockItemId });
+            modelBuilder.Entity<PurchaseItem>()
+                .HasKey(pi => new { pi.PurchaseId, pi.StockItemId });
+
             modelBuilder.Entity<PurchaseItem>()
                 .HasOne(p => p.Purchase)
                 .WithMany(pi => pi.PurchaseItems)

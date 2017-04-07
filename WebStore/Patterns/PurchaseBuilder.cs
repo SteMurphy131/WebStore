@@ -6,24 +6,16 @@ namespace WebStore.Patterns
 {
     public class PurchaseBuilder
     {
-        private int Id { get; set; }
         private int UserId { get; set; }
         private double TotalPrice { get; set; }
         private ICollection<PurchaseItem> PurchaseItems { get; set; }
         private User User { get; set; }
         private readonly Purchase _purchase = new Purchase();
 
-        public PurchaseBuilder CreatePurchase(int userId)
+        public PurchaseBuilder Create(int userId)
         {
             UserId = userId;
             _purchase.UserID = userId;
-            return this;
-        }
-
-        public PurchaseBuilder WithPurchaseItems(ICollection<StockItem> items)
-        {
-            TotalPrice = items.Sum(i => i.Price);
-            PurchaseItems = items.Select(item => new PurchaseItem {Purchase = _purchase, StockItem = item}).ToList();
             return this;
         }
 
@@ -31,6 +23,17 @@ namespace WebStore.Patterns
         {
             User = user;
             _purchase.User = user;
+            return this;
+        }
+
+        public PurchaseBuilder WithPurchaseItems(ICollection<StockItem> items)
+        {
+            TotalPrice = items
+                .Sum(i => i.Price);
+
+            PurchaseItems = items
+                .Select(item => new PurchaseItem {Purchase = _purchase, StockItem = item}).ToList();
+
             return this;
         }
 

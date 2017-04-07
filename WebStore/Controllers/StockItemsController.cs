@@ -22,33 +22,26 @@ namespace WebStore.Controllers
             _accessProvider = context;    
         }
 
-        // GET: StockItems
         public IActionResult Index(string sortOrder, string searchString)
         {
             @ViewData["currentFilter"] = searchString;
             IQueryable<StockItem> items = _accessProvider.GetAllItems();
 
             if (!string.IsNullOrEmpty(searchString))
-            {
                 items = _accessProvider.GetItemsByCategory(searchString);
-            }
-
+            
             return View(_accessProvider.SortItems(items, sortOrder).ToList());
         }
 
-        // GET: StockItems/Details/5
         public async Task<IActionResult> Details(int id)
         {
             var stockItem = await _accessProvider.GetItem(id);
             if (stockItem == null)
-            {
                 return NotFound();
-            }
-
+            
             return View(stockItem);
         }
 
-        // GET: StockItems/Register
         public IActionResult Create()
         {
             return View();
@@ -70,9 +63,8 @@ namespace WebStore.Controllers
         {
             var stockItem = await _accessProvider.GetItem(id);
             if (stockItem == null)
-            {
                 return NotFound();
-            }
+            
             return View(stockItem);
         }
 
@@ -81,42 +73,34 @@ namespace WebStore.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Manufacturer,Price,Category,ImageUrl, StockLevel")] StockItem stockItem)
         {
             if (id != stockItem.ID)
-            {
                 return NotFound();
-            }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(stockItem);
+
+            try
             {
-                try
-                {
-                    await _accessProvider.UpdateItem(stockItem);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (! await StockItemExists(stockItem.ID))
-                        return NotFound();
-                    
-                    throw; 
-                }
-                return RedirectToAction("Index");
+                await _accessProvider.UpdateItem(stockItem);
             }
-            return View(stockItem);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (! await StockItemExists(stockItem.ID))
+                    return NotFound();
+                    
+                throw; 
+            }
+            return RedirectToAction("Index");
         }
-
-        // GET: StockItems/Delete/5
+        
         public async Task<IActionResult> Delete(int id)
         {
             var stockItem = await _accessProvider.GetItem(id);
-            
             if (stockItem == null)
-            {
                 return NotFound();
-            }
-
+            
             return View(stockItem);
         }
 
-        // POST: StockItems/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -144,7 +128,15 @@ namespace WebStore.Controllers
             var item = await _accessProvider.GetItem(itemId);
             var user = await _accessProvider.GetUser(id);
 
-            var comment = new Comment {Title=title, Text=text, StockItemId = itemId, UserId = id, User = user, StockItem = item };
+            CommentBuilder cBuilder = new CommentBuilder();
+            var comment = cBuilder.Create(id)
+                .WithText(text)
+                .WithTitle(title)
+                .WithUser(user)
+                .WithItem(item)
+                .WithItemId(itemId)
+                .Build();
+
             await _accessProvider.AddComment(comment);
 
             return View("Details", item);
@@ -156,14 +148,21 @@ namespace WebStore.Controllers
         {
             int id = (int)HttpContext.Session.GetInt32("_ID");
             int itemId = int.Parse(HttpContext.Request.Form["itemID"]);
-            var rating = HttpContext.Request.Form["rating"];
+            var scoreString = HttpContext.Request.Form["rating"];
 
             var user = await _accessProvider.GetUser(id);
             var item = await _accessProvider.GetItem(itemId);
-            int value = NumberConverter.ConvertStringToInt(rating);
+            int score = NumberConverter.ConvertStringToInt(scoreString);
 
-            var score = new Rating {Score = value, User = user, StockItem = item, UserId = id, StockItemId = itemId};
-            await _accessProvider.AddRating(score);
+            var rBuilder = new RatingBuilder();
+            var rating = rBuilder.Create(id)
+                .WithScore(score)
+                .WithItem(item)
+                .WithUser(user)
+                .WithItemId(itemId)
+                .Build();
+            
+            await _accessProvider.AddRating(rating);
 
             return View("Details", item);
         }
@@ -193,7 +192,7 @@ namespace WebStore.Controllers
             var cart = JsonConvert.DeserializeObject<ShoppingCart>(str);
 
             var builder = new PurchaseBuilder();
-            Purchase purchase = builder.CreatePurchase(userId)
+            Purchase purchase = builder.Create(userId)
                 .WithUser(user)
                 .WithPurchaseItems(cart.Items)
                 .Build();
